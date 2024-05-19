@@ -707,7 +707,7 @@ ant ants[MAX_ANT];
 char cities_ant[MAX_CITY][MAX_NAME];
 double latitude[MAX_CITY], longitude[MAX_CITY], distance_ant[MAX_CITY][MAX_CITY], pheromones[MAX_CITY][MAX_CITY];
 
-// Function to calculate the Haversine distance_ant
+// Fungsi untuk menentukan jarak antar 2 kota
 double haversine(double lat1, double lon1, double lat2, double lon2) {
     double dLat = (lat2 - lat1) * PI / 180.0;
     double dLon = (lon2 - lon1) * PI / 180.0;
@@ -721,6 +721,7 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
     return distance_ant;
 }
 
+// Inisialisasi satu struct ant, berdasarkan input kota asal
 int initialize_ant(ant *a, char city[]) {
     int found = -1;
     for (int i = 0; i < MAX_CITY; i++) {
@@ -746,6 +747,7 @@ int initialize_ant(ant *a, char city[]) {
     }
 }
 
+// Fungsi untuk mengevaporasi feromon di setiap edge
 void pheromone_evaporator() {
     // Evaporate pheromones first
     for (int i = 0; i < MAX_CITY; i++) {
@@ -758,22 +760,24 @@ void pheromone_evaporator() {
     }
 }
 
+// Fungsi untuk menyimpan feromon di setiap edge yang dilewati semut
 void pheromone_generator(ant a) {
     // Update pheromones based on the ant's tour
     for (int i = 0; i < a.n_city - 1; i++) {
-        pheromones[a.order_ant[i]][a.order_ant[i + 1]] += Q / a.distance_ant;   
+        pheromones[a.order_ant[i]][a.order_ant[i + 1]] += Q / a.distance_ant;   // Jumlah feromon tergantung jarak yang dilewati
         pheromones[a.order_ant[i + 1]][a.order_ant[i]] += Q / a.distance_ant;
     }
     pheromones[a.order_ant[a.n_city - 1]][a.order_ant[0]] += Q / a.distance_ant;   
     pheromones[a.order_ant[0]][a.order_ant[a.n_city - 1]] += Q / a.distance_ant;
 }
 
+//Fungsi untuk menentukan kota selanjutnya
 int next_city(ant a, int total_city) {
     double desires[total_city], sum_desire = 0.0;
 
     for (int i = 0; i < total_city; i++) {
         if (a.visited_ant[i] == 0) {
-            desires[i] = 1000 * pow(pheromones[a.current_city][i], ALPHA) * pow(1.0 / distance_ant[a.current_city][i], BETA);
+            desires[i] = 1000 * pow(pheromones[a.current_city][i], ALPHA) * pow(1.0 / distance_ant[a.current_city][i], BETA); // Pemilihan bergantung pada jumlah feromon dan jarak setiap edge
             if (desires[i] < 0.000001) {
                 desires[i] = 0.000001;
             }
@@ -783,6 +787,7 @@ int next_city(ant a, int total_city) {
         }
     }
 
+    // Pemilihan secara acak berbobot 
     double random = ((double)rand() / RAND_MAX) * sum_desire;
     double cumulative_probability = 0.0;
 
@@ -795,7 +800,7 @@ int next_city(ant a, int total_city) {
         }
     }
 
-    // In case no city is selected, which is unlikely
+    // Kasus kota tidak terpilih (seharusnya tidak mungkin terjadi)
     for (int i = 0; i < total_city; i++) {
         if (a.visited_ant[i] == 0) {
             return i;
@@ -804,6 +809,7 @@ int next_city(ant a, int total_city) {
     return -1;
 }
 
+// Menjalankan sebuah semut
 void ant_simulator(ant *a, int total_city) {
     int city = 0;
     while (city != -1) {
@@ -820,6 +826,7 @@ void ant_simulator(ant *a, int total_city) {
     pheromone_generator(*a);
 }
 
+// Mencetak jalur yang dilewati satu semut
 void print_tour(ant *a) {
     printf("Best route found:\n");
     for (int i = 0; i < a->n_city; i++) {
@@ -829,6 +836,7 @@ void print_tour(ant *a) {
     printf("Best route distance: %lf km\n", a->distance_ant);
 }
 
+// Fungsi utama ACO
 int aco() {
     char filename[20];
     char line[1000];
@@ -836,12 +844,14 @@ int aco() {
     printf("Enter list of cities file name: ");
     scanf("%s", filename);
 
+    // Pembukaan file
     FILE* file = fopen(filename, "r");
     if (!file) {
         printf("Error opening file\n");
         return 1;
     }
 
+    // Pembacaan file
     char *token;
     int counter = 0;
     while (fgets(line, sizeof(line), file)) {
@@ -857,41 +867,55 @@ int aco() {
 
     for (int i = 0; i < counter; i++) {
         for (int j = 0; j < counter; j++) {
+            // Perhitungan jarak setiap edge
             distance_ant[i][j] = haversine(latitude[i], longitude[i], latitude[j], longitude[j]);
-            pheromones[i][j] = 0.001; // Initializing pheromones to a small positive value
+
+            //Inisialisasi nilai feromon ke nilai yang sangat kecil
+            pheromones[i][j] = 0.001; 
         }
     }
 
+    // Pengambilan input kota asal
     char initial_city[MAX_NAME];
     printf("Enter starting point: ");
     scanf("%s", initial_city);
 
+    // Seed randomizer
     srand(time(NULL)); 
 
     int success;
 
     clock_t start_time = clock(); // Start time
 
+    // Loop mobilisasi semut
     for (int j = 0; j < MAX_ITERATIONS; j++) {
+        // Mobilisasi semut secara "paralel" 
+
+        //inisialisasi
         for (int i = 0; i < MAX_ANT; i++) {
             success = initialize_ant(&ants[i], initial_city);
             if (!success) break;
         }
 
+        //mobilisasi
         if (success) {
             for (int i = 0; i < MAX_ANT; i++) {
                 ant_simulator(&ants[i], counter);
             }
             pheromone_evaporator();
         }
+        else break;
     }
 
     clock_t end_time = clock(); // End time
     double time_spent = (double)(end_time - start_time) / CLOCKS_PER_SEC;
 
-    print_tour(&ants[MAX_ANT-1]);
-
-    printf("Time elapsed: %lf seconds\n", time_spent);
+    // Pencetakan hasil perjalan semut paling akhir
+    if (success){
+        print_tour(&ants[MAX_ANT-1]);
+    
+        printf("Time elapsed: %lf seconds\n", time_spent);
+    }
 
     return 0;
 }
