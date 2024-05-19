@@ -1103,8 +1103,9 @@ int genetics() {
     char fileName[50];
     printf("Enter list of cities file name: ");
     scanf("%s", fileName);
+    clock_t begin = clock();
     read_cities(fileName);
-
+    
     // Calculate distances_genetic between cities_genetic
 
     calculate_all_distance();
@@ -1138,7 +1139,7 @@ int genetics() {
 
     calculate_fitness(population, fitness);
     int best_index = find_best_solution(fitness);
-
+    
     printf("Best solution found:\n");
     printf("%s-> ", cities_genetic[starting_city_genetic].name);
     for (int i = 0; i < NUM_CITIES - 1; i++) {
@@ -1147,8 +1148,11 @@ int genetics() {
         [population[best_index][i]].name);
         }
     }
+    clock_t end = clock();
+    double timeSpent = (double)(end - begin) / CLOCKS_PER_SEC;
     printf("%s\n", cities_genetic[starting_city_genetic].name);  // Print the starting city again at the end
     printf("Total distance: %lf km\n", fitness[best_index]);
+    printf("Time elapsed: %lf s\n", timeSpent);
 
     return 0;
 }
