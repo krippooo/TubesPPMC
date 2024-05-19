@@ -696,11 +696,11 @@ int branch_n_bound() {
 
 //  START OF ACO
 typedef struct ant {
-    int order_ant[MAX_CITY]; // Order of cities_ant visited
-    int visited_ant[MAX_CITY]; // Cities already visited
-    int current_city; // Current position of the ant
-    int n_city; // Number of cities_ant visited
-    double distance_ant; // Total distance_ant traveled
+    int order_ant[MAX_CITY]; // Urutan didatanginya kota
+    int visited_ant[MAX_CITY]; // Penanda kota yang sudah dilewati
+    int current_city; // Posisi semut sekarang
+    int n_city; // Jumlah kota yang sudah didatangi
+    double distance_ant; // Jarak total yang dilewati
 } ant;
 
 ant ants[MAX_ANT];
