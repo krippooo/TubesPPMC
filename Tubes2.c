@@ -9,6 +9,9 @@
 #define EARTH_RADIUS 6371.0
 #define PI 3.14159265358979323846
 
+// Greedy define
+#define MAKS_KOTA 100
+
 // ACO define
 #define MAX_CITY 1000
 #define MAX_NAME 100
@@ -48,7 +51,7 @@ double haversine_dfs(double lat1, double lon1, double lat2, double lon2) {
     double dlat = to_radians_dfs(lat2 - lat1);
     double dlon = to_radians_dfs(lon2 - lon1);
     double a = sin(dlat/2) * sin(dlat/2) + cos(to_radians_dfs(lat1)) * cos(to_radians_dfs(lat2)) * sin(dlon/2) * sin(dlon/2);
-    double c = 2 * atan2(sqrt(a), sqrt(1-a));
+    double c = 2 * asin(sqrt(a));
     return EARTH_RADIUS * c;
 }
 
@@ -151,7 +154,7 @@ double haversineDistance_bfs(double lat1, double lon1, double lat2, double lon2)
     double a = sin(dLat / 2) * sin(dLat / 2) +
                cos(toRadians_bfs(lat1)) * cos(toRadians_bfs(lat2)) *
                sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double c = 2 * asin(sqrt(a));
     return EARTH_RADIUS * c;
 }
 
@@ -293,14 +296,267 @@ int bfs() {
 //END OF BFS
 
 //START OF GREEDY
-int greedy(){
+typedef struct {
+    char nama[50];
+    double latitude;
+    double longitude;
+} Kota_greedy;
 
+// Fungsi untuk menghitung jarak antara dua titik menggunakan formula Haversine
+double haversine_greedy(double lat1, double lon1, double lat2, double lon2) {
+    double phi1 = lat1 * PI / 180.0;
+    double phi2 = lat2 * PI / 180.0;
+    double delta_phi = (lat2 - lat1) * PI / 180.0;
+    double delta_lambda = (lon2 - lon1) * PI / 180.0;
+
+    double a = sin(delta_phi / 2.0) * sin(delta_phi / 2.0) +
+               cos(phi1) * cos(phi2) * sin(delta_lambda / 2.0) * sin(delta_lambda / 2.0);
+    double c = 2.0 * asin(sqrt(a));
+
+    return EARTH_RADIUS * c;
 }
+
+// Fungsi untuk mencari kota terdekat yang belum dikunjungi
+int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kota_greedy kota[]) {
+    double jarak_min = DBL_MAX;
+    int kota_terdekat = -1;
+
+    for (int i = 0; i < n; i++) {
+        if (!dikunjungi[i]) {
+            double jarak = haversine_greedy(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
+                                     kota[i].latitude, kota[i].longitude);
+            if (jarak < jarak_min) {
+                jarak_min = jarak;
+                kota_terdekat = i;
+            }
+        }
+    }
+
+    return kota_terdekat;
+}
+
+// Fungsi untuk menyelesaikan TSP dengan algoritma Greedy
+void tsp_greedy(int kota_awal, int n, Kota_greedy kota[]) {
+    int dikunjungi[n];
+    for (int i = 0; i < n; i++) {
+        dikunjungi[i] = 0;
+    }
+
+    int kota_saat_ini = kota_awal;
+    dikunjungi[kota_saat_ini] = 1;
+
+    double jarak_total = 0;
+    printf("Rute perjalanan terpendek: %s", kota[kota_saat_ini].nama);
+
+    for (int i = 1; i < n; i++) {
+        int kota_berikutnya = cari_kota_terdekat(kota_saat_ini, n, dikunjungi, kota);
+        jarak_total += haversine_greedy(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
+                                 kota[kota_berikutnya].latitude, kota[kota_berikutnya].longitude);
+        kota_saat_ini = kota_berikutnya;
+        dikunjungi[kota_saat_ini] = 1;
+        printf(" -> %s", kota[kota_saat_ini].nama);
+    }
+
+    // Kembali ke kota awal
+    jarak_total += haversine_greedy(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
+                             kota[kota_awal].latitude, kota[kota_awal].longitude);
+    printf(" -> %s\n", kota[kota_awal].nama);
+
+    printf("Jarak total: %.2f km\n", jarak_total);
+}
+
+// Fungsi untuk membaca data kota dari file CSV
+int baca_kota_dari_csv(const char *nama_file, Kota_greedy kota[]) {
+    FILE *file = fopen(nama_file, "r");
+    if (!file) {
+        printf("Error opening file! %s\n", nama_file);
+        return -1;
+    }
+
+    char baris[100];
+    int count = 0;
+
+    while (fgets(baris, sizeof(baris), file)) {
+        if (sscanf(baris, "%49[^,],%lf,%lf", kota[count].nama, &kota[count].latitude, &kota[count].longitude) == 3) {
+            count++;
+            if (count >= MAKS_KOTA) {
+                printf("Maksimal jumlah kota yang didukung adalah %d.\n", MAKS_KOTA);
+                break;
+            }
+        }
+    }
+
+    fclose(file);
+    return count;
+}
+
+int greedy() {
+    char nama_file[100];
+    printf("Masukkan nama file CSV: ");
+    scanf("%99s", nama_file);
+
+    Kota_greedy kota[MAKS_KOTA];
+    int n = baca_kota_dari_csv(nama_file, kota);
+    if (n <= 0) {
+        return 1;
+    }
+
+    char nama_kota_awal[50];
+    printf("Masukkan kota asal keberangkatan: ");
+    scanf("%49s", nama_kota_awal);
+
+    int kota_awal = -1;
+    for (int i = 0; i < n; i++) {
+        if (strcmp(kota[i].nama, nama_kota_awal) == 0) {
+            kota_awal = i;
+            break;
+        }
+    }
+
+    if (kota_awal == -1) {
+        printf("Kota_greedy tidak ditemukan.\n");
+        return 1;
+    }
+
+    tsp_greedy(kota_awal, n, kota);
+
+    return 0;
+}
+
 //END OF GREEDY
 
 //START OF BRUTE FORCE
-int brute_force(){
+int size;
+int vis[15], permutation[15], n;
+int best_route[15];
+float min_cost = 1e9;
+char namaKota[15][255];
+float matriks[15][15];
 
+int open_init(char *namaFile, float matriks[15][15], char namaKota[15][255], int *n){
+    *n = 0;
+    // membuka dan cek file
+    FILE *file = fopen(namaFile, "r");
+    if (file == NULL){
+        printf("File tidak ditemukan.");
+        return 0;
+    }
+    
+    char line[255];
+    float latitude[15];
+    float longitude[15];
+    
+    //membaca file
+    while (fgets(line, 255, file)){
+        //pengambilan data dari baris file
+        strcpy(namaKota[*n], strtok(line, ","));
+        latitude[*n] = atof(strtok(NULL, ","));
+        longitude[*n] = atof(strtok(NULL, "\n"));
+        
+        *n += 1;
+    }
+    
+    // cek kesesuaian jumlah kota (6 <= jumlah kota <= 15)
+    if (*n < 5 || *n > 14){
+        printf("\nJumlah kota tidak sesuai.");
+        return 0;
+    }
+    // mengisi matriks yang berisi jarak dari suatu titik ke titik lainnya
+    for (int i = 0; i < *n; i++){
+        for (int j = 0; j < *n; j++){
+            matriks[i][j] = 2 * EARTH_RADIUS * asin(sqrt(pow(sin((latitude[j]-latitude[i])*PI/360), 2) + cos(latitude[j]*PI/180) * cos(latitude[i]*PI/180) * pow(sin((longitude[j]-longitude[i])*PI/360), 2)));
+        }
+    }
+    return 1;
+}
+
+void generate(int x) {
+    if(x >= n) { 
+        float cost = 0;
+        for(int i = 1; i < n; ++i) {
+            cost += matriks[permutation[i - 1]][permutation[i]];
+        }
+
+        cost += matriks[permutation[n - 1]][permutation[0]];
+
+        if(cost < min_cost) { 
+            min_cost = cost;
+            for(int i = 0; i < n; ++i) {
+                best_route[i] = permutation[i];
+            }
+        }
+    } else {
+        for(int i = 0; i < n; ++i) {
+            if(vis[i]) continue;
+            vis[i] = 1;
+            permutation[x] = i;
+            generate(x + 1);
+            vis[i] = 0;
+        }
+    }
+}
+
+void find_starting_point(char *point, int *index) {
+    for(int i = 0; i < n; ++i) {
+        if(strcmp(point, namaKota[i]) == 0) {
+            *index = i;
+            return;
+        }
+    }
+    *index = -1;
+}
+
+void output_best_route(){
+    puts("Best route found:");
+    for(int i = 0; i < n; ++i) {
+        printf("%s -> ", namaKota[best_route[i]]);
+    }
+
+    printf("%s\n", namaKota[best_route[0]]);
+    printf("Best route distance: %.5f km\n", min_cost);
+}
+
+int brute_force() {
+    char namaFile[255];
+    n = 0;
+ 
+    printf("Enter list of cities file name: ");
+    scanf("%s", namaFile);
+
+    if (open_init(namaFile, matriks, namaKota, &n) == 0){
+        return 0;
+    }
+
+    size = n; 
+
+    int bestTour = (int)malloc(size * sizeof(int));
+    float bestTourLength = -1;
+
+    char startingCity[100];
+    printf("Enter starting point: ");
+    getchar(); 
+    fgets(startingCity, sizeof(startingCity), stdin);
+    startingCity[strcspn(startingCity, "\n")] = '\0'; 
+
+    int startingIndex;
+    find_starting_point(startingCity, &startingIndex);
+
+    if (startingIndex == -1) {
+        printf("Starting city not found\n");
+        return 0;
+    }
+
+    vis[startingIndex] = 1; 
+    permutation[0] = startingIndex;
+    clock_t start_time = clock();
+    generate(1);
+    clock_t end_time = clock();
+    output_best_route();
+
+    double time_spent = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+    printf("Time elapsed: %.10f s\n", time_spent);
+
+    return 0;
 }
 //END OF BRUTE FORCEC
 
@@ -330,7 +586,7 @@ double haversine_bnb(double lat1, double lon1, double lat2, double lon2) {
     lat2 = toRadians_bnb(lat2);
     double a = sin(dLat / 2) * sin(dLat / 2) +
                sin(dLon / 2) * sin(dLon / 2) * cos(lat1) * cos(lat2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double c = 2 * asin(sqrt(a));
     return EARTH_RADIUS * c;
 }
 
@@ -459,7 +715,7 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
     double a = sin(dLat / 2) * sin(dLat / 2) +
                cos(lat1 * PI / 180.0) * cos(lat2 * PI / 180.0) * 
                sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double c = 2 * asin(sqrt(a));
     double distance_ant = 6371.0 * c;
 
     return distance_ant;
@@ -651,7 +907,7 @@ typedef struct {
 int NUM_CITIES = NUM_CITIES_init;
 
 City_genetic cities_genetic[NUM_CITIES_init];
-int distances_genetic[NUM_CITIES_init][NUM_CITIES_init];
+double distances_genetic[NUM_CITIES_init][NUM_CITIES_init];
 int starting_city_genetic = 0;  // User-defined starting city index
 
 void read_cities(const char *filename) {
@@ -677,21 +933,20 @@ void read_cities(const char *filename) {
 }
 
 double calculate_distance_genetic(double lat1, double lon1, double lat2, double lon2) {
-    double dlat = (lat2 - lat1) * M_PI / 180.0;
-    double dlon = (lon2 - lon1) * M_PI / 180.0;
-    lat1 = lat1 * M_PI / 180.0;
-    lat2 = lat2 * M_PI / 180.0;
+    double dlat = (lat2 - lat1) * PI / 180.0;
+    double dlon = (lon2 - lon1) * PI / 180.0;
+    lat1 = lat1 * PI / 180.0;
+    lat2 = lat2 * PI / 180.0;
 
-    double a = sin(dlat / 2) * sin(dlat / 2) +
-               cos(lat1) * cos(lat2) * sin(dlon / 2) * sin(dlon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double a = sin(dlat / 2) * sin(dlat / 2) + cos(lat1) * cos(lat2) * sin(dlon / 2) * sin(dlon / 2);
+    double c = 2 * asin(sqrt(a));
     return EARTH_RADIUS * c;
 }
 
 void calculate_all_distance() {
     for (int i = 0; i < NUM_CITIES; i++) {
         for (int j = 0; j < NUM_CITIES; j++) {
-            distances_genetic[i][j] = (int)calculate_distance_genetic
+            distances_genetic[i][j] = (float)calculate_distance_genetic
         (cities_genetic[i].latitude, cities_genetic[i].longitude, cities_genetic[j].latitude, cities_genetic[j].longitude);
         }
     }
@@ -715,9 +970,9 @@ void initialize_population(int population[POP_SIZE][NUM_CITIES]) {
     }
 }
 
-void calculate_fitness(int population[POP_SIZE][NUM_CITIES], int fitness[POP_SIZE]) {
+void calculate_fitness(int population[POP_SIZE][NUM_CITIES], double fitness[POP_SIZE]) {
     for (int i = 0; i < POP_SIZE; i++) {
-        int total_distance = 0;
+        double total_distance = 0;
         total_distance += distances_genetic[starting_city_genetic][population[i][0]];
         for (int j = 0; j < NUM_CITIES - 2; j++) {
             total_distance += distances_genetic[population[i][j]][population[i][j + 1]];
@@ -775,7 +1030,7 @@ void mutate(int individual[NUM_CITIES]) {
     individual[city2] = temp;
 }
 
-void selection(int population[POP_SIZE][NUM_CITIES], int fitness[POP_SIZE], int new_population[POP_SIZE][NUM_CITIES]) {
+void selection(int population[POP_SIZE][NUM_CITIES], double fitness[POP_SIZE], int new_population[POP_SIZE][NUM_CITIES]) {
     for (int i = 0; i < POP_SIZE; i++) {
         int parent1 = rand() % POP_SIZE;
         int parent2 = rand() % POP_SIZE;
@@ -798,7 +1053,7 @@ void selection(int population[POP_SIZE][NUM_CITIES], int fitness[POP_SIZE], int 
     }
 }
 
-int find_best_solution(int fitness[POP_SIZE]) {
+int find_best_solution(double fitness[POP_SIZE]) {
     int best_index = 0;
     for (int i = 1; i < POP_SIZE; i++) {
         if (fitness[i] < fitness[best_index]) {
@@ -821,7 +1076,10 @@ int genetics() {
     srand(time(0));
 
     // Read cities_genetic from CSV file
-    read_cities("lokasi1.csv");
+    char fileName[50];
+    printf("Enter list of cities file name: ");
+    scanf("%s", fileName);
+    read_cities(fileName);
 
     // Calculate distances_genetic between cities_genetic
 
@@ -840,7 +1098,7 @@ int genetics() {
 
     int population[POP_SIZE][NUM_CITIES];
     int new_population[POP_SIZE][NUM_CITIES];
-    int fitness[POP_SIZE];
+    double fitness[POP_SIZE];
 
     initialize_population(population);
 
@@ -866,11 +1124,12 @@ int genetics() {
         }
     }
     printf("%s\n", cities_genetic[starting_city_genetic].name);  // Print the starting city again at the end
-    printf("Total distance: %d km\n", fitness[best_index]);
+    printf("Total distance: %lf km\n", fitness[best_index]);
 
     return 0;
 }
 // END OF GENETICS
+
 int main (){
     int menu;
     printf("Selamat Datang di Program Best Algorithm!\nSilahkan pilih jenis algoritma apa yang ingin diakses.\n1. Deep First Search (DFS)\n2. Breadth First Search(BFS)\n3. Greedy Algorithm\n4. Brute Force\n5. Branch and Bound\n6. Genetic Algorithm\n7. Ant Colony Optimization\n Algoritma yang ingin diakses adalah algoritma (angka-nya saja) :");
