@@ -16,11 +16,11 @@
 #define MAX_CITY 1000
 #define MAX_NAME 100
 #define MAX_ANT 100
-#define MAX_ITERATIONS 1000
+#define MAX_ITERATIONS 100
 #define ALPHA 4.0
 #define BETA 5.0
 #define Q 100.0
-#define RHO 0.1
+#define RHO 0.01
 
 // Genetics define
 #define POP_SIZE 100
@@ -823,7 +823,6 @@ void ant_simulator(ant *a, int total_city) {
         }
     }
     a->distance_ant += distance_ant[a->current_city][a->order_ant[0]];
-    pheromone_generator(*a);
 }
 
 // Mencetak jalur yang dilewati satu semut
@@ -901,6 +900,9 @@ int aco() {
         if (success) {
             for (int i = 0; i < MAX_ANT; i++) {
                 ant_simulator(&ants[i], counter);
+            }
+            for (int i = 0; i < MAX_ANT; i++) {
+                pheromone_generator(ants[i]);
             }
             pheromone_evaporator();
         }
