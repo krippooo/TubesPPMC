@@ -10,7 +10,7 @@
 #define PI 3.14159265358979323846
 
 // Greedy define
-#define MAKS_KOTA 100
+#define MAKS_KOTA 15
 
 // ACO define
 #define MAX_CITY 1000
@@ -300,30 +300,28 @@ typedef struct {
     char nama[50];
     double latitude;
     double longitude;
-} Kota_greedy;
+} Kota;
 
-// Fungsi untuk menghitung jarak antara dua titik menggunakan formula Haversine
-double haversine_greedy(double lat1, double lon1, double lat2, double lon2) {
-    double phi1 = lat1 * PI / 180.0;
-    double phi2 = lat2 * PI / 180.0;
-    double delta_phi = (lat2 - lat1) * PI / 180.0;
-    double delta_lambda = (lon2 - lon1) * PI / 180.0;
+double haversine(double lat1, double lon1, double lat2, double lon2) {
+    double phi1 = lat1 * M_PI / 180.0;
+    double phi2 = lat2 * M_PI / 180.0;
+    double delta_phi = (lat2 - lat1) * M_PI / 180.0;
+    double delta_lambda = (lon2 - lon1) * M_PI / 180.0;
 
     double a = sin(delta_phi / 2.0) * sin(delta_phi / 2.0) +
                cos(phi1) * cos(phi2) * sin(delta_lambda / 2.0) * sin(delta_lambda / 2.0);
-    double c = 2.0 * asin(sqrt(a));
+    double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
 
-    return EARTH_RADIUS * c;
+    return JARI_JARI_BUMI * c;
 }
 
-// Fungsi untuk mencari kota terdekat yang belum dikunjungi
-int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kota_greedy kota[]) {
+int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kota kota[]) {
     double jarak_min = DBL_MAX;
     int kota_terdekat = -1;
 
     for (int i = 0; i < n; i++) {
         if (!dikunjungi[i]) {
-            double jarak = haversine_greedy(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
+            double jarak = haversine(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
                                      kota[i].latitude, kota[i].longitude);
             if (jarak < jarak_min) {
                 jarak_min = jarak;
@@ -335,8 +333,7 @@ int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kota_greedy k
     return kota_terdekat;
 }
 
-// Fungsi untuk menyelesaikan TSP dengan algoritma Greedy
-void tsp_greedy(int kota_awal, int n, Kota_greedy kota[]) {
+void tsp_greedy(int kota_awal, int n, Kota kota[]) {
     int dikunjungi[n];
     for (int i = 0; i < n; i++) {
         dikunjungi[i] = 0;
@@ -346,27 +343,25 @@ void tsp_greedy(int kota_awal, int n, Kota_greedy kota[]) {
     dikunjungi[kota_saat_ini] = 1;
 
     double jarak_total = 0;
-    printf("Rute perjalanan terpendek: %s", kota[kota_saat_ini].nama);
+    printf("Best route found:\n %s", kota[kota_saat_ini].nama);
 
     for (int i = 1; i < n; i++) {
         int kota_berikutnya = cari_kota_terdekat(kota_saat_ini, n, dikunjungi, kota);
-        jarak_total += haversine_greedy(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
+        jarak_total += haversine(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
                                  kota[kota_berikutnya].latitude, kota[kota_berikutnya].longitude);
         kota_saat_ini = kota_berikutnya;
         dikunjungi[kota_saat_ini] = 1;
         printf(" -> %s", kota[kota_saat_ini].nama);
     }
 
-    // Kembali ke kota awal
-    jarak_total += haversine_greedy(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
+    jarak_total += haversine(kota[kota_saat_ini].latitude, kota[kota_saat_ini].longitude,
                              kota[kota_awal].latitude, kota[kota_awal].longitude);
     printf(" -> %s\n", kota[kota_awal].nama);
 
-    printf("Jarak total: %.2f km\n", jarak_total);
+    printf("Jarak total: %.5f km\n", jarak_total);
 }
 
-// Fungsi untuk membaca data kota dari file CSV
-int baca_kota_dari_csv(const char *nama_file, Kota_greedy kota[]) {
+int baca_kota_dari_csv(const char *nama_file, Kota kota[]) {
     FILE *file = fopen(nama_file, "r");
     if (!file) {
         printf("Error opening file! %s\n", nama_file);
@@ -380,7 +375,7 @@ int baca_kota_dari_csv(const char *nama_file, Kota_greedy kota[]) {
         if (sscanf(baris, "%49[^,],%lf,%lf", kota[count].nama, &kota[count].latitude, &kota[count].longitude) == 3) {
             count++;
             if (count >= MAKS_KOTA) {
-                printf("Maksimal jumlah kota yang didukung adalah %d.\n", MAKS_KOTA);
+                printf("List exceed the maximum number (%d) of cities.\n", MAKS_KOTA);
                 break;
             }
         }
@@ -395,15 +390,17 @@ int greedy() {
     printf("Masukkan nama file CSV: ");
     scanf("%99s", nama_file);
 
-    Kota_greedy kota[MAKS_KOTA];
+    Kota kota[MAKS_KOTA];
     int n = baca_kota_dari_csv(nama_file, kota);
     if (n <= 0) {
         return 1;
     }
 
     char nama_kota_awal[50];
-    printf("Masukkan kota asal keberangkatan: ");
-    scanf("%49s", nama_kota_awal);
+    printf("Enter starting point: ");
+    getchar();
+    fgets(nama_kota_awal, sizeof(nama_kota_awal), stdin);
+    nama_kota_awal[strcspn(nama_kota_awal, "\n")] = '\0';
 
     int kota_awal = -1;
     for (int i = 0; i < n; i++) {
@@ -414,11 +411,18 @@ int greedy() {
     }
 
     if (kota_awal == -1) {
-        printf("Kota_greedy tidak ditemukan.\n");
+        printf("City is not in the list.\n");
         return 1;
     }
 
+    clock_t mulai = clock();
+
     tsp_greedy(kota_awal, n, kota);
+
+    clock_t selesai = clock();
+    double waktu_eksekusi = (double)(selesai - mulai) / CLOCKS_PER_SEC;
+
+    printf("Time elapsed: %.6f s\n", waktu_eksekusi);
 
     return 0;
 }
