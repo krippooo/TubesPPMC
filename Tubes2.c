@@ -296,6 +296,17 @@ int bfs() {
 //END OF BFS
 
 //START OF GREEDY
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <float.h>
+#include <time.h>
+
+#define EARTH_RADIUS 6371.0
+#define MAKS_KOTA 15
+#define PI 3.14159265358979
+
 typedef struct {
     char nama[50];
     double latitude;
@@ -303,16 +314,16 @@ typedef struct {
 } Kota;
 
 double haversine(double lat1, double lon1, double lat2, double lon2) {
-    double phi1 = lat1 * M_PI / 180.0;
-    double phi2 = lat2 * M_PI / 180.0;
-    double delta_phi = (lat2 - lat1) * M_PI / 180.0;
-    double delta_lambda = (lon2 - lon1) * M_PI / 180.0;
+    double phi1 = lat1 * PI / 180.0;
+    double phi2 = lat2 * PI / 180.0;
+    double delta_phi = (lat2 - lat1) * PI / 180.0;
+    double delta_lambda = (lon2 - lon1) * PI / 180.0;
 
     double a = sin(delta_phi / 2.0) * sin(delta_phi / 2.0) +
                cos(phi1) * cos(phi2) * sin(delta_lambda / 2.0) * sin(delta_lambda / 2.0);
     double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
 
-    return JARI_JARI_BUMI * c;
+    return EARTH_RADIUS * c;
 }
 
 int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kota kota[]) {
@@ -385,7 +396,7 @@ int baca_kota_dari_csv(const char *nama_file, Kota kota[]) {
     return count;
 }
 
-int greedy() {
+int main() {
     char nama_file[100];
     printf("Masukkan nama file CSV: ");
     scanf("%99s", nama_file);
@@ -426,6 +437,7 @@ int greedy() {
 
     return 0;
 }
+
 
 //END OF GREEDY
 
