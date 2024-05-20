@@ -689,12 +689,15 @@ int branch_n_bound() {
     int route[15];
     route[0] = startIndex;
 
-    clock_t start = clock();
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
     branchbound(startIndex, 1 << startIndex, 0, route, 1);
-    clock_t end = clock();
+    gettimeofday(&end, NULL);
+
+    double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1e6;
 
     printRoute();
-    printf("Time elapsed: %.10f s\n", (double)(end - start) / CLOCKS_PER_SEC);
+    printf("Time elapsed: %.10f s\n", elapsed);
 
     return 0;
 }
@@ -1111,7 +1114,6 @@ int genetics() {
     char fileName[50];
     printf("Enter list of cities file name: ");
     scanf("%s", fileName);
-    clock_t begin = clock();
     read_cities(fileName);
     
     // Calculate distances_genetic between cities_genetic
@@ -1123,7 +1125,8 @@ int genetics() {
     printf("Enter the starting city name: ");
     scanf("%s", starting_city_name);
     starting_city_genetic = find_city_index(starting_city_name);
-
+    clock_t begin = clock();
+    
     if (starting_city_genetic == -1) {
         printf("City_genetic not found!\n");
         return 1;
