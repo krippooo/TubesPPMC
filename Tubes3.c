@@ -21,7 +21,7 @@
 #define ALPHA 3.0
 #define BETA 4.0
 #define Q 10000.0
-#define RHO 0.1
+#define RHO 0.00001
 
 // Genetics define
 #define POP_SIZE 100
@@ -529,9 +529,6 @@ int brute_force() {
     }
 
     size = n; 
-
-    int bestTour = (int*)malloc(size * sizeof(int));
-    float bestTourLength = -1;
 
     char startingCity[100];
     printf("Enter starting point: ");
