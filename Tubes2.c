@@ -535,7 +535,7 @@ int brute_force() {
 
     size = n; 
 
-    int bestTour = (int)malloc(size * sizeof(int));
+    int bestTour = (int*)malloc(size * sizeof(int));
     float bestTourLength = -1;
 
     char startingCity[100];
@@ -604,7 +604,7 @@ void citiesFile_bnb(char *fileName) {
         exit(1);
     }
     while (fscanf(file, "%[^,],%lf,%lf\n", cities[numCities].name, &cities[numCities].latitude, &cities[numCities].longitude) != EOF) {
-        printf("Read city: %s, %lf, %lf\n", cities[numCities].name, cities[numCities].latitude, cities[numCities].longitude); // Debugging
+        // printf("Read city: %s, %lf, %lf\n", cities[numCities].name, cities[numCities].latitude, cities[numCities].longitude); // Debugging
         numCities++;
     }
     fclose(file);
