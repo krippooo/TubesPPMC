@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <float.h>
 #include <time.h>
+#include <sys/time.h>
 
 #define EARTH_RADIUS 6371.0
 #define PI 3.14159265358979323846
