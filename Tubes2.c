@@ -18,10 +18,10 @@
 #define MAX_NAME 100
 #define MAX_ANT 100
 #define MAX_ITERATIONS 100
-#define ALPHA 4.0
-#define BETA 5.0
-#define Q 100.0
-#define RHO 0.01
+#define ALPHA 3.0
+#define BETA 4.0
+#define Q 10000.0
+#define RHO 0.1
 
 // Genetics define
 #define POP_SIZE 100
@@ -763,8 +763,8 @@ void pheromone_evaporator() {
     for (int i = 0; i < MAX_CITY; i++) {
         for (int j = 0; j < MAX_CITY; j++) {
             pheromones[i][j] *= (1 - RHO);
-            if (pheromones[i][j] < 0.000001) {
-                pheromones[i][j] = 0.000001;
+            if (pheromones[i][j] < 1.0) {
+                pheromones[i][j] = 1.0;
             }
         }
     }
@@ -787,9 +787,9 @@ int next_city(ant a, int total_city) {
 
     for (int i = 0; i < total_city; i++) {
         if (a.visited_ant[i] == 0) {
-            desires[i] = 1000 * pow(pheromones[a.current_city][i], ALPHA) * pow(1.0 / distance_ant[a.current_city][i], BETA); // Pemilihan bergantung pada jumlah feromon dan jarak setiap edge
-            if (desires[i] < 0.000001) {
-                desires[i] = 0.000001;
+            desires[i] = pow(pheromones[a.current_city][i], ALPHA) * pow(1.0 / distance_ant[a.current_city][i], BETA); // Pemilihan bergantung pada jumlah feromon dan jarak setiap edge
+            if (desires[i] < 1.0) {
+                desires[i] = 1.0;
             }
             sum_desire += desires[i];
         } else {
