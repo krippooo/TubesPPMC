@@ -1,3 +1,17 @@
+/*Tugas Besar EL2208 Praktikum Pemecahan Masalah dengan C 2023/2024
+*Kelompok         : F3
+*Anggota          : Muhammad Zaki Fazansyah 	(18322018) 
+                    Andika Rama Ardhi Nugraha 	(18322019) 
+                    Yazid Nur Hidayat	        (18322020) 
+                    Requint Nurliawan	        (18322021) 
+                    Muhammad Rafi Ar-Rantisi	(18322022) 
+                    Mayesa Adhisty		        (18322023) 
+                    Musthafa Ibrahim 	    	(18322024) 
+*Asisten (NIM)    : Muhammad Daris Nurhakim (13220047)
+*Nama File        : Tubes PPMC_F3.c
+*Deskripsi        : The Travelling Salesman Problem
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
