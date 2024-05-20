@@ -301,7 +301,7 @@ typedef struct {
     char nama[50];
     double latitude;
     double longitude;
-} Kota;
+} Kotahehe; // Ubah nama struct menjadi Kotahehe
 
 double haversine(double lat1, double lon1, double lat2, double lon2) {
     double phi1 = lat1 * PI / 180.0;
@@ -316,7 +316,7 @@ double haversine(double lat1, double lon1, double lat2, double lon2) {
     return EARTH_RADIUS * c;
 }
 
-int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kota kota[]) {
+int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kotahehe kota[]) {
     double jarak_min = DBL_MAX;
     int kota_terdekat = -1;
 
@@ -334,7 +334,7 @@ int cari_kota_terdekat(int kota_saat_ini, int n, int dikunjungi[], Kota kota[]) 
     return kota_terdekat;
 }
 
-void tsp_greedy(int kota_awal, int n, Kota kota[]) {
+void tsp_greedy(int kota_awal, int n, Kotahehe kota[]) {
     int dikunjungi[n];
     for (int i = 0; i < n; i++) {
         dikunjungi[i] = 0;
@@ -362,7 +362,7 @@ void tsp_greedy(int kota_awal, int n, Kota kota[]) {
     printf("Jarak total: %.5f km\n", jarak_total);
 }
 
-int baca_kota_dari_csv(const char *nama_file, Kota kota[]) {
+int baca_kota_dari_csv(const char *nama_file, Kotahehe kota[]) {
     FILE *file = fopen(nama_file, "r");
     if (!file) {
         printf("Error opening file! %s\n", nama_file);
@@ -386,12 +386,12 @@ int baca_kota_dari_csv(const char *nama_file, Kota kota[]) {
     return count;
 }
 
-int main() {
+int greedy() {
     char nama_file[100];
     printf("Masukkan nama file CSV: ");
     scanf("%99s", nama_file);
 
-    Kota kota[MAKS_KOTA];
+    Kotahehe kota[MAKS_KOTA]; // Ubah tipe data struct menjadi Kotahehe
     int n = baca_kota_dari_csv(nama_file, kota);
     if (n <= 0) {
         return 1;
@@ -714,7 +714,7 @@ char cities_ant[MAX_CITY][MAX_NAME];
 double latitude[MAX_CITY], longitude[MAX_CITY], distance_ant[MAX_CITY][MAX_CITY], pheromones[MAX_CITY][MAX_CITY];
 
 // Fungsi untuk menentukan jarak antar 2 kota
-double haversine(double lat1, double lon1, double lat2, double lon2) {
+double haversine_aco(double lat1, double lon1, double lat2, double lon2) {
     double dLat = (lat2 - lat1) * PI / 180.0;
     double dLon = (lon2 - lon1) * PI / 180.0;
 
@@ -873,7 +873,7 @@ int aco() {
     for (int i = 0; i < counter; i++) {
         for (int j = 0; j < counter; j++) {
             // Perhitungan jarak setiap edge
-            distance_ant[i][j] = haversine(latitude[i], longitude[i], latitude[j], longitude[j]);
+            distance_ant[i][j] = haversine_aco(latitude[i], longitude[i], latitude[j], longitude[j]);
 
             //Inisialisasi nilai feromon ke nilai yang sangat kecil
             pheromones[i][j] = 0.001; 
