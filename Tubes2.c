@@ -296,16 +296,6 @@ int bfs() {
 //END OF BFS
 
 //START OF GREEDY
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <float.h>
-#include <time.h>
-
-#define EARTH_RADIUS 6371.0
-#define MAKS_KOTA 15
-#define PI 3.14159265358979
 
 typedef struct {
     char nama[50];
